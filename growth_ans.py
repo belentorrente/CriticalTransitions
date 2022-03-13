@@ -21,6 +21,10 @@ class Growth(DynamicModel):
         # Override default matrix size
         setclone(map_len, map_len, 1, 0, 0)
 
+        # State variables to store timestep-based results
+        self.total_var = []
+        self.total_skew = []
+
     def initial(self):
         # maximum growth rate
         self.r = 0.08
@@ -62,10 +66,13 @@ class Growth(DynamicModel):
         iter_mean = maptotal(self.x) / cell_area
         # Variance for current model iteration
         iter_var = maptotal(sqr(self.x - iter_mean)) / cell_area
+        self.total_var.append(float(iter_var))  # Store this variance for final results
         # Standard deviation for current model iteration
         iter_std = sqrt(float(iter_var))
         # Skewness for current  model iteration
         iter_skew = maptotal((self.x - iter_mean) ** 3) / cell_area
+        self.total_skew.append(float(iter_skew))  # Store this variance for final results
+
         self.report(iter_var, 'var')
         self.report(iter_skew, 'skew')
         # Show results on screen
@@ -80,6 +87,14 @@ class Growth(DynamicModel):
         # pylab.show() # Uncomment to plot fft2
         pylab.savefig('fft' + str(self.currentTimeStep()) + '.png') # Save every fft run
         # input("Press enter to continue") # Uncomment to plot one by one
+
+        # Export results on last iteration
+        if self.currentTimeStep() == self.nrTimeSteps():
+            print("End of model run")
+            print("Variance over time:")
+            print(self.total_var)
+            print("Skewness over time:")
+            print(self.total_var)
 
 
 nrOfTimeSteps = 7000
