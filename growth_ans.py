@@ -1,9 +1,14 @@
+import numpy.fft
 from pcraster.framework import *
+from numpy import *
+import pylab
 
 
 class Growth(DynamicModel):
-    def __init__(self):
+
+    def __init__(self, map_len):
         DynamicModel.__init__(self)
+        # Init properties used in the model
         self.numberOfNeighbours = None
         self.D = None
         self.x = None
@@ -11,7 +16,10 @@ class Growth(DynamicModel):
         self.cI = None
         self.c = None
         self.r = None
-        setclone('clone.map')
+        self.map_len = map_len  # Required to propagate lengths
+        # setclone('clone.map') # This default map uses a 40x40 matrix
+        # Override default matrix size
+        setclone(map_len, map_len, 1, 0, 0)
 
     def initial(self):
         # maximum growth rate
@@ -34,10 +42,14 @@ class Growth(DynamicModel):
 
         self.numberOfNeighbours = window4total(spatial(scalar(1)))
 
+        a_uniform_map = uniform(1)
+        self.report(a_uniform_map, 'uni')
+
     def dynamic(self):
         growth = self.r * self.x * (1 - self.x / self.K) - self.c * ((self.x * self.x) / ((self.x * self.x) + 1))
         diffusion = self.D * (window4total(self.x) - self.numberOfNeighbours * self.x)
         growth = growth + diffusion
+
         self.x = self.x + growth
 
         self.x = max(self.x + normal(1) / 10, 0)
@@ -45,12 +57,33 @@ class Growth(DynamicModel):
 
         self.c = self.c + self.cI
 
-        mean = maptotal(self.x) / (40 * 40)
-        var = maptotal(sqr(self.x - mean)) / (40 * 40)
-        self.report(var, 'var')
+        cell_area = int(self.map_len * self.map_len)  # Default is 40 x 40
+        print('Cell area: ', cell_area)
+        iter_mean = maptotal(self.x) / cell_area
+        # Variance for current model iteration
+        iter_var = maptotal(sqr(self.x - iter_mean)) / cell_area
+        # Standard deviation for current model iteration
+        iter_std = sqrt(float(iter_var))
+        # Skewness for current  model iteration
+        iter_skew = maptotal((self.x - iter_mean) ** 3) / cell_area
+        self.report(iter_var, 'var')
+        self.report(iter_skew, 'skew')
+        # Show results on screen
+        print("iter=%d, mean=%f, variance=%f, std=%f, skewness=%f" % (self.currentTimeStep(), float(iter_mean), float(iter_var), iter_std, float(iter_skew)))
+        # aguila(self.x)  # Plot this iteration of the model map
+        # pylab.imshow(pcraster.pcr2numpy(self.x, 0))  # Uncomment to plot this iteration of model map (same as above)
+        # pylab.show()  # Uncomment to plot this iteration of model map (same as above)
+
+        ft_raster = numpy.fft.fft2(pcraster.pcr2numpy(self.x, 0))
+        ft_raster = numpy.fft.fftshift(ft_raster)
+        pylab.imshow(numpy.abs(ft_raster)) # Uncomment to plot fft2
+        # pylab.show() # Uncomment to plot fft2
+        pylab.savefig('fft' + str(self.currentTimeStep()) + '.png') # Save every fft run
+        # input("Press enter to continue") # Uncomment to plot one by one
 
 
-nrOfTimeSteps = 2500
-myModel = Growth()
+nrOfTimeSteps = 7000
+cellSize = 40
+myModel = Growth(cellSize)
 dynamicModel = DynamicFramework(myModel, nrOfTimeSteps)
 dynamicModel.run()
