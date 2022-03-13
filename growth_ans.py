@@ -85,7 +85,8 @@ class Growth(DynamicModel):
         ft_raster = numpy.fft.fftshift(ft_raster)
         pylab.imshow(numpy.abs(ft_raster)) # Uncomment to plot fft2
         # pylab.show() # Uncomment to plot fft2
-        pylab.savefig('fft' + str(self.currentTimeStep()) + '.png') # Save every fft run
+        pylab.savefig('fft' + '_' + str(self.nrTimeSteps()) + '_' + str(self.map_len) + '_' +
+                      str(self.currentTimeStep()) + '.png')  # Save every fft run
         # input("Press enter to continue") # Uncomment to plot one by one
 
         # Export results on last iteration
@@ -93,8 +94,15 @@ class Growth(DynamicModel):
             print("End of model run")
             print("Variance over time:")
             print(self.total_var)
+            pylab.close()  # Close previous figure in case fft figure above is active
+            pylab.plot(self.total_var)
+            pylab.savefig('var' + '_' + str(self.nrTimeSteps()) + '_' + str(self.map_len) + '.png')
+            pylab.show()
             print("Skewness over time:")
-            print(self.total_var)
+            print(self.total_skew)
+            pylab.plot(self.total_skew)
+            pylab.savefig('skew' + '_' + str(self.nrTimeSteps()) + '_' + str(self.map_len) + '.png')
+            pylab.show()
 
 
 nrOfTimeSteps = 7000
