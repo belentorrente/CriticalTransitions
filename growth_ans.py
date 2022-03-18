@@ -80,7 +80,7 @@ class Growth(DynamicModel):
         # Standard deviation for current model iteration
         iter_std = sqrt(float(iter_var))
         # Skewness for current  model iteration
-        iter_skew = maptotal((self.x - iter_mean) ** 3) / cell_area
+        iter_skew = maptotal((self.x - iter_mean) ** 3) / (cell_area * iter_std ** 3)
         self.total_skew.append(float(iter_skew))  # Store this variance for final results
 
         # Show results on screen
