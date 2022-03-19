@@ -157,7 +157,7 @@ class Growth(DynamicModel):
             pylab.close()
 
 
-nrOfTimeSteps = 20
+nrOfTimeSteps = 2500
 cellSizes = [40, 80, 160]
 dispersionRates = [0.1, 0.01, 0.001]
 for cellSize in cellSizes:
